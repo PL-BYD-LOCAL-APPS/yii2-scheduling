@@ -104,6 +104,7 @@ class Schedule extends Component
      * Which will run './yii help' every minute.
      *
      * @param array $commands
+     * @param bool $inForeground
      * @return void
      */
     public function fromCommandsAndCronsList(array $commands, bool $inForeground = true)
