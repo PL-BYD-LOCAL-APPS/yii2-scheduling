@@ -7,7 +7,6 @@ use yii\base\Component;
 use yii\base\Application;
 use yii\mutex\FileMutex;
 
-
 /**
  * Class Schedule
  */
@@ -50,7 +49,7 @@ class Schedule extends Component
      * @param  array   $parameters
      * @return Event
      */
-    public function call($callback, array $parameters = array())
+    public function call($callback, array $parameters = [])
     {
         $this->_events[] = $event = new CallbackEvent($this->_mutex, $callback, $parameters);
         return $event;
@@ -91,9 +90,38 @@ class Schedule extends Component
      */
     public function dueEvents(Application $app)
     {
-        return array_filter($this->_events, function(Event $event) use ($app)
-        {
+        return array_filter($this->_events, function (Event $event) use ($app) {
             return $event->isDue($app);
         });
+    }
+
+    /**
+     * Creates scheduled events based on a list of command => cron pairs, eg.
+     * [
+     *     'help' => '* * * * *',
+     * ]
+     *
+     * Which will run './yii help' every minute.
+     *
+     * @param array $commands
+     * @return void
+     */
+    public function fromCommandsAndCronsList(array $commands, bool $inForeground = true)
+    {
+        $timestamp = date('Ymd-Hi');
+
+        foreach ($commands as $command => $cronDefinition) {
+            if (empty($cronDefinition)) {
+                continue;
+            }
+
+            $filename = preg_split('/\s/', $command, 2);
+            $filename = preg_replace('/\//', '_', $filename[0]);
+
+            $this->command($command)
+                ->sendOutputTo(\Yii::getAlias("@runtime/schedule/{$filename}_{$timestamp}.out"))
+                ->cron($cronDefinition)
+                ->setInForeground($inForeground);
+        }
     }
 }

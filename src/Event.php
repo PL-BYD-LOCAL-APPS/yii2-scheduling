@@ -26,60 +26,70 @@ class Event extends Component
      * @var string
      */
     public $command;
+
     /**
      * The cron expression representing the event's frequency.
      *
      * @var string
      */
     protected $_expression = '* * * * * *';
+
     /**
      * The timezone the date should be evaluated on.
      *
      * @var \DateTimeZone|string
      */
     protected $_timezone;
+
     /**
      * The user the command should run as.
      *
      * @var string
      */
     protected $_user;
+
     /**
      * The filter callback.
      *
      * @var \Closure
      */
     protected $_filter;
+
     /**
      * The reject callback.
      *
      * @var \Closure
      */
     protected $_reject;
+
     /**
      * The location that output should be sent to.
      *
      * @var string
      */
     protected $_output = null;
+
     /**
      * The string for redirection.
      *
      * @var array
      */
     protected $_redirect = ' > ';
+
     /**
      * The array of callbacks to be run after the event is finished.
      *
      * @var array
      */
     protected $_afterCallbacks = [];
+
     /**
      * The human readable description of the event.
      *
      * @var string
      */
     protected $_description;
+
     /**
      * The mutex implementation.
      *
@@ -93,6 +103,20 @@ class Event extends Component
      * @var bool
      */
     protected $_omitErrors = false;
+
+    /**
+     * The exit status code.
+     *
+     * @var int
+     */
+    protected $_resultCode;
+
+    /**
+     * If the command should be run in foreground.
+     *
+     * @var bool
+     */
+    protected $_isInForeground = false;
 
     /**
      * Create a new event instance.
@@ -116,7 +140,7 @@ class Event extends Component
     public function run(Application $app)
     {
         $this->trigger(self::EVENT_BEFORE_RUN);
-        if (count($this->_afterCallbacks) > 0) {
+        if ($this->_isInForeground || count($this->_afterCallbacks) > 0) {
             $this->runCommandInForeground($app);
         } else {
             $this->runCommandInBackground($app);
@@ -149,7 +173,7 @@ class Event extends Component
         else {
             $process = (new Process($command, $cwd, null, null, null));
         }
-        $process->run();
+        $this->_resultCode = $process->run();
         $this->callAfterCallbacks($app);
     }
 
@@ -184,7 +208,7 @@ class Event extends Component
     protected function runCommandInBackground(Application $app)
     {
         chdir(dirname($app->request->getScriptFile()));
-        exec($this->buildCommand());
+        exec($this->buildCommand(), $output, $this->_resultCode);
     }
 
     /**
@@ -724,5 +748,35 @@ class Event extends Component
         } else {
             return '/dev/null';
         }
+    }
+
+    /**
+     * Returns result code of the command executed.
+     *
+     * @return integer
+     */
+    public function getResultCode(): int
+    {
+        return $this->_resultCode ?? 0;
+    }
+
+    /**
+     * Returns output file name.
+     *
+     * @return string
+     */
+    public function getOutputName(): string
+    {
+        return $this->_output ?? '';
+    }
+
+    /**
+     * Set if the command should be run in foreground.
+     *
+     * @param bool $isInForeground
+     */
+    public function setInForeground(bool $isInForeground): void
+    {
+        $this->_isInForeground = $isInForeground;
     }
 }
