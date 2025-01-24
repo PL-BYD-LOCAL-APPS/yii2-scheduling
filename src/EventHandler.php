@@ -9,7 +9,7 @@ class EventHandler
      *
      * @param \yii\base\Event $event
      */
-    public static function handleAfterRun(Event $event)
+    public static function handleAfterRun(\yii\base\Event $event)
     {
         /** @var Event $schedulingEvent */
         $schedulingEvent = $event->sender;
