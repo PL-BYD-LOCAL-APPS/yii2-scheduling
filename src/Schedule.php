@@ -105,9 +105,10 @@ class Schedule extends Component
      *
      * @param array $commands
      * @param bool $inForeground
+     * @param string $outputFolder
      * @return void
      */
-    public function fromCommandsAndCronsList(array $commands, bool $inForeground = true)
+    public function fromCommandsAndCronsList(array $commands, bool $inForeground = true, $outputFolder = '@runtime/schedule/')
     {
         $timestamp = date('Ymd-Hi');
 
@@ -120,7 +121,7 @@ class Schedule extends Component
             $filename = preg_replace('/\//', '_', $filename[0]);
 
             $this->command($command)
-                ->sendOutputTo(\Yii::getAlias("@runtime/schedule/{$filename}_{$timestamp}.out"))
+                ->sendOutputTo(\Yii::getAlias($outputFolder . "{$filename}_{$timestamp}.out"))
                 ->cron($cronDefinition)
                 ->setInForeground($inForeground);
         }
