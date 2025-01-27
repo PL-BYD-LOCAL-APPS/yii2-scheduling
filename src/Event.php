@@ -169,8 +169,7 @@ class Event extends Component
         $cwd = dirname($app->request->getScriptFile());
         if (method_exists(Process::class, 'fromShellCommandline')) {
             $process = Process::fromShellCommandline($command, $cwd, null, null, null);
-        }
-        else {
+        } else {
             $process = (new Process($command, $cwd, null, null, null));
         }
         $this->_resultCode = $process->run();
@@ -244,7 +243,8 @@ class Event extends Component
      */
     protected function filtersPass(Application $app)
     {
-        if ($this->_filter && !call_user_func($this->_filter, $app) ||
+        if (
+            $this->_filter && !call_user_func($this->_filter, $app) ||
             $this->_reject && call_user_func($this->_reject, $app)
         ) {
             return false;
@@ -485,7 +485,7 @@ class Event extends Component
      */
     public function everyNMinutes($minutes)
     {
-        return $this->cron('*/'.$minutes.' * * * * *');
+        return $this->cron('*/' . $minutes . ' * * * * *');
     }
 
     /**
@@ -561,9 +561,9 @@ class Event extends Component
      */
     public function withoutOverlapping()
     {
-        return $this->then(function() {
+        return $this->then(function () {
             $this->_mutex->release($this->mutexName());
-        })->skip(function() {
+        })->skip(function () {
             return !$this->_mutex->acquire($this->mutexName());
         });
     }
@@ -673,7 +673,7 @@ class Event extends Component
     {
         $textBody = file_get_contents($this->_output);
 
-        if (trim($textBody) != '' ) {
+        if (trim($textBody) != '') {
             $mailer->compose()
                 ->setTextBody($textBody)
                 ->setSubject($this->getEmailSubject())
@@ -704,7 +704,7 @@ class Event extends Component
     public function thenPing($url)
     {
         return $this->then(function () use ($url) {
-            (new HttpClient)->get($url);
+            (new HttpClient())->get($url);
         });
     }
 
@@ -727,7 +727,9 @@ class Event extends Component
      */
     public function getSummaryForDisplay()
     {
-        if (is_string($this->_description)) return $this->_description;
+        if (is_string($this->_description)) {
+            return $this->_description;
+        }
         return $this->buildCommand();
     }
 
@@ -774,9 +776,11 @@ class Event extends Component
      * Set if the command should be run in foreground.
      *
      * @param bool $isInForeground
+     * @return $this
      */
-    public function setInForeground(bool $isInForeground): void
+    public function setInForeground(bool $isInForeground)
     {
         $this->_isInForeground = $isInForeground;
+        return $this;
     }
 }
