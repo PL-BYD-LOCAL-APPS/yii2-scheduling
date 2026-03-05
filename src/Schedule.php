@@ -111,19 +111,30 @@ class Schedule extends Component
     public function fromCommandsAndCronsList(array $commands, bool $inForeground = true, $outputFolder = '@runtime/schedule/')
     {
         $timestamp = date('Ymd-Hi');
+        $fileNames = [];
 
         foreach ($commands as $command => $cronDefinition) {
             if (empty($cronDefinition)) {
                 continue;
             }
 
+            // Generate base filename from command
             $filename = preg_split('/\s/', $command, 2);
             $filename = preg_replace('/\//', '_', $filename[0]);
+            $filename .= '-' . $timestamp;
+
+            // Handle duplicate filenames
+            if (isset($fileNames[$filename])) {
+                $filename .= '_' . ++$fileNames[$filename];
+            } else {
+                $fileNames[$filename] = 0;
+            }
 
             $this->command($command)
-                ->sendOutputTo(\Yii::getAlias($outputFolder . "{$filename}_{$timestamp}.out"))
+                ->sendOutputTo(\Yii::getAlias($outputFolder . "{$filename}.out"))
                 ->cron($cronDefinition)
                 ->setInForeground($inForeground);
         }
     }
+}
 }
