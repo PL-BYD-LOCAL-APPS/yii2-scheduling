@@ -137,4 +137,3 @@ class Schedule extends Component
         }
     }
 }
-}
